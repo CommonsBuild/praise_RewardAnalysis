@@ -2,5 +2,10 @@
 
 To run:
 ```bash
-python main.py 
+jupyter notebook
+```
+
+For the python file
+```bash
+jupyter notebook
 ```

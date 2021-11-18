@@ -1,3 +1,6 @@
+#### Scripts for the data reward data analysis. Currently outdated since the notebook is the main product, this is more for testing purposes  
+
+
 from typing import SupportsRound
 import pandas as pd 
 import numpy as np 
@@ -66,22 +69,22 @@ total_period_praise =combine_datasets(praise_distribution, sourcecred_data)
 print(total_period_praise)
 
 p_vals = np.array([50,80,90,95,99])
-IH_rp = np.array([tb.resource_percentage(total_period_praise["TOKEN TO RECEIVE"], p) for p in p_vals])
+token_rp = np.array([tb.resource_percentage(total_period_praise["TOKEN TO RECEIVE"], p) for p in p_vals])
 
 my_rd_index = [("Top " + str(100 - p) +"%") for p in p_vals]
-resource_distribution = pd.DataFrame({"IH": IH_rp}, index = my_rd_index)
+resource_distribution = pd.DataFrame({"Rewards": token_rp}, index = my_rd_index)
 print("\n======= RESOURCE PERCENTAGES ========")
 print(resource_distribution)
 
 p_vals = np.array([0, 50, 80])
-IH_gc = np.array([tb.gini_gt_p(np.array(total_period_praise["TOKEN TO RECEIVE"]), p) for p in p_vals])
+rewards_gc = np.array([tb.gini_gt_p(np.array(total_period_praise["TOKEN TO RECEIVE"]), p) for p in p_vals])
 
 my_index = ["All", "Top 50%", "Top 20%"]
-gini_coefs = pd.DataFrame({"IH": IH_gc}, index = my_index)
+gini_coefs = pd.DataFrame({"rewards": rewards_gc}, index = my_index)
 print("\n======= GINI COEFFICIENTS ========")
 print(gini_coefs)
 
-entropies_df = pd.DataFrame(data = {"IH" : tb.calc_shannon_entropies(total_period_praise["PERCENTAGE"]) }, index = ["Entropy", "Max Entropy", "% of Max"])
+entropies_df = pd.DataFrame(data = {"Rewards" : tb.calc_shannon_entropies(total_period_praise["PERCENTAGE"]) }, index = ["Entropy", "Max Entropy", "% of Max"])
 print("\n======= ENTROPIES ========")
 print(entropies_df)
 

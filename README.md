@@ -7,5 +7,15 @@ jupyter notebook
 
 For the python file
 ```bash
-jupyter notebook
+python main.py
+```
+
+For generating mock datasets with default values
+```bash
+python generateMockData.py
+```
+
+For full instructions about how to set individual parameters of the mock datasets 
+```bash
+python generateMockData.py -h
 ```

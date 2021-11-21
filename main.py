@@ -5,6 +5,10 @@ from typing import SupportsRound
 import pandas as pd 
 import numpy as np 
 import analytics_toolbox as tb
+from ipyfilechooser import FileChooser
+
+
+fc_praise = FileChooser('./exampleFiles')
 
 PRAISE_DATA_PATH = ".\exampleFiles\Praise and SourceCred output data - PRAISE.csv"
 SOURCECRED_DATA_PATH = ".\exampleFiles\Praise and SourceCred output data - SOURCECRED.csv"

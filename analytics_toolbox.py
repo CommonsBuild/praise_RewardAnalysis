@@ -21,7 +21,10 @@ def calc_shannon_entropies(x):
 def nakamoto_coeff(x, key):
     sorted_x = x.sort_values(by = key, ascending = False)
     tot_sum = np.array(sorted_x[key].cumsum())
-    winner = np.array([k for k in range(len(tot_sum)) if tot_sum[k] > 0.5]).min() + 1
+    try:
+        winner = np.array([k for k in range(len(tot_sum)) if tot_sum[k] > 0.5]).min() + 1
+    except:
+        winner = -1
     return winner
 
 def gini_gt_p(x,p):

@@ -146,7 +146,7 @@ def generate_sourcecred_dataset( number_of_users = 50, number_of_tokens=1000):
         ))
 
     total_grain = df["AMOUNT"].sum()
-    df["%"] = df["AMOUNT"]/total_grain
+    df["%"] = (df["AMOUNT"]/total_grain)*100
     df["TOKEN TO RECEIVE"] = df["%"] * number_of_tokens
     
     #rename for equivalency with praise

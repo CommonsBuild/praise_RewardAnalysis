@@ -46,7 +46,9 @@ def generate_praise_dataset(number_of_users, total_number_of_praises, number_of_
             SERVER = mock_server,
             CHANNEL = mock_channel,
             QUANT_1 = praise_value,
-            QUANT_1_ID = quant_id
+            QUANT_1_ID = quant_id,
+            QUANT_1_DUPLICATE_ID = "",
+            QUANT_1_DISMISSED =""
         ))
 
 
@@ -55,12 +57,16 @@ def generate_praise_dataset(number_of_users, total_number_of_praises, number_of_
     for i in range(1, quants_per_praise):
         col1_name = "QUANT_" + str(i+1)
         col2_name = col1_name + "_ID"
+        col3_name = col1_name + "_DUPLICATE_ID"
+        col4_name = col1_name + "_DISMISSED"
 
         rand_modifiers= rng.choice(range(-2,3), total_number_of_praises , p=[0.1, 0.2, 0.4, 0.2, 0.1])
         
         #some nice Gandhi Nukes here... probably worth revisiting if this is to become serious
         df_output[col1_name] = (df_output['QUANT_1'] + rand_modifiers ) % len(PRAISE_VALUES)
         df_output[col2_name] = (df_output['QUANT_1_ID'] + i) % number_of_quants
+        df_output[col3_name] = ''
+        df_output[col4_name] = ''
 
         #replace with the "real" numbers
         df_output[col1_name] = df_output[col1_name].apply(lambda x: PRAISE_VALUES[x])
@@ -72,7 +78,7 @@ def generate_praise_dataset(number_of_users, total_number_of_praises, number_of_
     list_of_averages = []
     for i in range(len(df_output)):
         score_list = []
-        for j in range(1, quant_per_praise+1):
+        for j in range(1, quants_per_praise+1):
             col_name = "QUANT_" + str(j)
             score_list.append(df_output.iloc[i][col_name])
         
@@ -84,8 +90,6 @@ def generate_praise_dataset(number_of_users, total_number_of_praises, number_of_
     df_output['AVG QUANT'] = list_of_averages
 
     #generate dupliations, dismissals, correctons, etc
-    df_output['DUPLICATE ID'] = ''
-    df_output['DISMISSED'] = ''
     df_output['CORRECTION ADD'] = ''
     df_output['CORRECTION SUB'] = ''
     df_output['CORRECTION COMMENT'] = ''
@@ -99,14 +103,18 @@ def generate_praise_dataset(number_of_users, total_number_of_praises, number_of_
 
 
     #the modification is capped: maximum is doubling the average score, minimum reducing to 0 (if avg is 0 then we add smth betweeen 0-50)
+    #for now we assume that one mark as duplicate/dismissal sets the whole praise to 0
     for i in range(len(sample)):
+        rand_id = rng.integers(quants_per_praise) + 1
         if i < p1 :
             #dismiss
-            df_output.loc[sample[i],'DISMISSED'] = 'TRUE'
+            df_output.loc[sample[i], 'QUANT_'+str(rand_id)+'_DISMISSED'] = 'TRUE'
+            df_output.loc[sample[i], 'QUANT_'+str(rand_id)] = '0'
             df_output.loc[sample[i],'FINAL QUANT'] = '0'
         elif i < p2:
             #duplicate
-            df_output.loc[sample[i], 'DUPLICATE ID'] = rng.choice(praise_id)
+            df_output.loc[sample[i], 'QUANT_'+str(rand_id)+'_DUPLICATE_ID'] = rng.choice(praise_id)
+            df_output.loc[sample[i], 'QUANT_'+str(rand_id)] = '0'
             df_output.loc[sample[i], 'FINAL QUANT'] = '0'
         elif i < p3:
             #add
@@ -130,6 +138,17 @@ def generate_praise_dataset(number_of_users, total_number_of_praises, number_of_
     df_output.rename(columns = {'PRAISE_ID':'ID', 'USER_ID':'TO', 'FROM_ID': 'FROM' }, inplace = True)
     df_output['TO'] = df_output['TO'].apply(lambda x: "bot" + str(df_output.loc[x, 'TO']) + "#" + str(rng.integers(0,2000)))
     #print(df_output)
+
+    #rename quants
+    list_of_quants = []
+    for i in range(number_of_quants):
+        randAddress = str('0x' + '%030x' % rng.bit_generator.random_raw())
+        list_of_quants.append(randAddress)
+    
+    for j in range(quants_per_praise):#
+        df_output['QUANT_'+ str(j+1) +'_ID'] = df_output['QUANT_'+ str(j+1) +'_ID'].apply(lambda x: list_of_quants[x])
+    
+
 
     return df_output
 

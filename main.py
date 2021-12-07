@@ -8,6 +8,11 @@ import numpy as np
 import analytics_toolbox as tb
 from ipyfilechooser import FileChooser
 
+import holoviews as hv
+from holoviews import opts
+import plotly.graph_objects as go
+import plotly.express as pex
+
 
 fc_praise = FileChooser('./exampleFiles')
 

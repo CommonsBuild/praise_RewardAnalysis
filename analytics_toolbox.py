@@ -69,9 +69,10 @@ def prepare_praise_flow(dataframe_in, n_senders, n_receivers):
     reference_df.reset_index(inplace=True, drop=True)
 
     # sank_df1=df1.copy()
-    n1 = n_senders  # Left side. Praise senders. 10 larget one + rest (others)
-    # Right side. Praise receivers. 15 larget one + rest (others)
-    n2 = n_receivers
+    # Left side. Praise senders. X largest ones + rest (others). (-1 because of zero-counting)
+    n1 = n_senders - 1
+    # Right side. Praise receivers. Y larget one + rest (others) (-1 because of zero-counting)
+    n2 = n_receivers - 1
 
     df_from = reference_df.groupby(['FROM']).sum().copy()
     df_from.reset_index(inplace=True, drop=False)

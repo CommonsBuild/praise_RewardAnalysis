@@ -13,6 +13,8 @@ from holoviews import opts
 import plotly.graph_objects as go
 import plotly.express as pex
 
+import random
+
 
 fc_praise = FileChooser('./exampleFiles')
 
@@ -160,3 +162,7 @@ print("===== PRAISE FLOW ===========")
 praise_flow = tb.prepare_praise_flow(
     praise_distribution, n_senders=10, n_receivers=20)
 print(praise_flow)
+
+# generate random eth address lookaliike
+t3 = '%030x' % random.randrange(16**40)
+print(t3)

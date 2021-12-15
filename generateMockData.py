@@ -3,6 +3,8 @@ from numpy.lib.npyio import save
 import pandas as pd
 import numpy as np
 from numpy.random import default_rng
+import random
+
 import matplotlib.pyplot as plt
 from math import sqrt
 import argparse
@@ -11,6 +13,8 @@ from pathlib import Path
 
 
 PRAISE_VALUES = [0, 13, 21, 55, 144]
+# we'll generate a bunch of random addresses and assign them at the end
+RANDOM_ADDRESS_LIST = []
 
 
 rng = default_rng()
@@ -22,7 +26,7 @@ def generate_praise_dataset(number_of_users, total_number_of_praises, number_of_
     user_id = (rng.pareto(3, int(total_number_of_praises*3/2))*100).astype(int)
     user_id = user_id[user_id < number_of_users][:total_number_of_praises]
     # alternative normal distribution
-    #user_id = rng.normal(loc= number_of_users * 0.5, scale=sqrt(number_of_users*0.5*0.5), size=total_number_of_praises).astype(int)
+    # user_id = rng.normal(loc= number_of_users * 0.5, scale=sqrt(number_of_users*0.5*0.5), size=total_number_of_praises).astype(int)
 
     from_id = rng.integers(0, number_of_users, total_number_of_praises)
     praise_value = rng.integers(0, 5, total_number_of_praises)
@@ -141,29 +145,30 @@ def generate_praise_dataset(number_of_users, total_number_of_praises, number_of_
     df_output.rename(
         columns={'PRAISE_ID': 'ID', 'USER_ID': 'TO', 'FROM_ID': 'FROM'}, inplace=True)
     df_output['TO'] = df_output['TO'].apply(
-        lambda x: "bot" + str(df_output.loc[x, 'TO']) + "#" + str(1000))
+        lambda x: str(RANDOM_ADDRESS_LIST[x]))
     df_output['FROM'] = df_output['FROM'].apply(
-        lambda x: "bot" + str(df_output.loc[x, 'FROM']) + "#" + str(1000))
+        lambda x: str(RANDOM_ADDRESS_LIST[x]))
     # print(df_output)
 
-    # rename quants
+    # get random quants
     list_of_quants = []
     for i in range(number_of_quants):
-        randAddress = str('0x' + '%030x' % rng.bit_generator.random_raw())
+        randAddress = rng.integers(number_of_users)
         list_of_quants.append(randAddress)
 
     for j in range(quants_per_praise):
         df_output['QUANT_' + str(j+1) + '_ID'] = df_output['QUANT_' +
-                                                           str(j+1) + '_ID'].apply(lambda x: list_of_quants[x])
+                                                           str(j+1) + '_ID'].apply(lambda x: RANDOM_ADDRESS_LIST[x])
 
     return df_output
 
 
 def generate_sourcecred_dataset(number_of_users=50, number_of_tokens=1000):
     user_id = list(range(0, number_of_users))
-    user_grain = list((rng.pareto(3, size=number_of_users)*1000).astype(int))
+    #user_grain = list((rng.pareto(3, size=number_of_users)*1000).astype(int))
     # alternative normal distribution
-    #user_grain = rng.normal(loc= 125, scale=sqrt(125*0.5*0.5), size=number_of_users).astype(int)
+    user_grain = rng.normal(loc=125, scale=sqrt(
+        125*0.5*0.5), size=number_of_users).astype(int)
 
     df = pd.DataFrame(dict(
         IDENTITY=user_id,
@@ -171,12 +176,12 @@ def generate_sourcecred_dataset(number_of_users=50, number_of_tokens=1000):
     ))
 
     total_grain = df["AMOUNT"].sum()
-    df["%"] = (df["AMOUNT"]/total_grain)*100
+    df["%"] = (df["AMOUNT"]/total_grain)
     df["TOKEN TO RECEIVE"] = df["%"] * number_of_tokens
 
     # rename for equivalency with praise
     df['IDENTITY'] = df['IDENTITY'].apply(
-        lambda x: "bot" + str(df.loc[x, 'IDENTITY']))
+        lambda x: str(RANDOM_ADDRESS_LIST[x]))
 
     return df
 
@@ -190,8 +195,10 @@ def save_dataset(name, df):
 
 parser = argparse.ArgumentParser(
     description='Create Datasets for praise Analysis testing.')
-parser.add_argument("-u", "--user_num", type=int,
-                    help="Number of unique users in the system. OPTIONAL, defaults to 50")
+parser.add_argument("-up", "--user_num_praise", type=int,
+                    help="Number of unique users in the praise system. OPTIONAL, defaults to 100")
+parser.add_argument("-us", "--user_num_sourcecred", type=int,
+                    help="Number of unique users in the sourcecred system. OPTIONAL, defaults to 50")
 parser.add_argument("-p", "--praise_num", type=int,
                     help="The number of unique praises to generate. OPTIONAL, defaults to 500")
 parser.add_argument("-q", "--quant_num", type=int,
@@ -207,25 +214,31 @@ parser.add_argument('--onlySourcecred', action='store_true',
 args = parser.parse_args()
 
 
-user_num = args.user_num if args.user_num is not None else 50
+user_num_praise = args.user_num_praise if args.user_num_praise is not None else 100
+user_num_sourcecred = args.user_num_sourcecred if args.user_num_sourcecred is not None else 50
 praise_num = args.praise_num if args.praise_num is not None else 500
 quant_num = args.quant_num if args.quant_num is not None else 10
 quant_per_praise = args.quant_per_praise if args.quant_per_praise is not None else 3
 token_num = args.token_num if args.token_num is not None else 1000
 
+user_count = user_num_praise if user_num_praise > user_num_sourcecred else user_num_sourcecred
+for i in range(user_count):
+    rand_add = "0x" + ('%030x' % random.randrange(16**40))
+    RANDOM_ADDRESS_LIST.append(rand_add)
+
 
 if args.onlyPraise:
-    dataset = generate_praise_dataset(number_of_users=user_num, total_number_of_praises=praise_num,
+    dataset = generate_praise_dataset(number_of_users=user_num_praise, total_number_of_praises=praise_num,
                                       number_of_quants=quant_num, quants_per_praise=quant_per_praise).copy()
     save_dataset("praise", dataset)
 elif args.onlySourcecred:
     dataset = generate_sourcecred_dataset(
-        number_of_users=user_num, number_of_tokens=token_num).copy()
+        number_of_users=user_num_sourcecred, number_of_tokens=token_num).copy()
     save_dataset("sourcecred", dataset)
 else:
-    dataset_praise = generate_praise_dataset(number_of_users=user_num, total_number_of_praises=praise_num,
+    dataset_praise = generate_praise_dataset(number_of_users=user_num_praise, total_number_of_praises=praise_num,
                                              number_of_quants=quant_num, quants_per_praise=quant_per_praise).copy()
     save_dataset("praise", dataset_praise)
     dataset_sourcecred = generate_sourcecred_dataset(
-        number_of_users=user_num, number_of_tokens=token_num).copy()
+        number_of_users=user_num_sourcecred, number_of_tokens=token_num).copy()
     save_dataset("sourcecred", dataset_sourcecred)
